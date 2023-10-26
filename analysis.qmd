@@ -1,0 +1,76 @@
+---
+title: "research"
+---
+
+```{r}
+#| label: load_packages
+#| warning: false
+#| message: false
+
+# load packages
+library(tidyverse)
+library(tidymodels)
+library(patchwork)
+library(knitr)
+library(kableExtra)
+library(readxl)
+library(stats)
+
+# set default theme and larger font size for ggplot2
+ggplot2::theme_set(ggplot2::theme_bw(base_size = 20))
+
+```
+
+```{r}
+#| label: load_data
+#| warning: false
+#| message: false
+
+# Read data from an Excel file
+data <- read_excel("filtered_data_simplified.xlsx")
+
+```
+
+```{r}
+#| label: pivot_data
+
+wide_data <- data |>
+  select(-Assay) |>
+  pivot_wider(names_from = UniProt, values_from = NPX) 
+
+```
+
+```{r}
+#| label: all_v_one
+
+all_v_one_data <- wide_data |>
+  filter(MS_TYPE != "Control") |>
+  mutate(MS_TYPE = case_when(
+    MS_TYPE == "RR" ~ "Not PP",
+    MS_TYPE == "SP" ~ "Not PP",
+    TRUE ~ MS_TYPE
+  ))
+
+```
+
+```{r}
+#| label: create_model
+
+model_data <- all_v_one_data |>
+  select(-SampleID) |>
+  mutate(MS_TYPE = as.numeric(case_when(
+    MS_TYPE == "PP" ~ 1,
+    MS_TYPE == "Not PP" ~ 0
+  )))
+
+for (col_name in names(model_data)) {
+  linear_reg()
+}
+
+
+```
+
+```{r}
+
+```
+
