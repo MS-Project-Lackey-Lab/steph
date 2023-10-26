@@ -27,7 +27,7 @@ ggplot2::theme_set(ggplot2::theme_bw(base_size = 20))
 #| message: false
 
 # Read data from an Excel file
-data <- read_excel("filtered_data_simplified.xlsx")
+data <- read_excel("data/filtered_data_simplified.xlsx")
 
 ```
 
@@ -63,14 +63,26 @@ model_data <- all_v_one_data |>
     MS_TYPE == "Not PP" ~ 0
   )))
 
-for (col_name in names(model_data)) {
-  linear_reg()
-}
-
-
 ```
 
 ```{r}
+#| label: anova
+
+p_values <- data.frame(col_name = character(), p_value = numeric())
+
+for (col_name in colnames(model_data)) {
+  if (col_name != "MS_TYPE") {
+    model <- aov(MS_TYPE ~ model_data[[col_name]], data = model_data)
+    anova_results <- summary(model)
+    p_value <- anova_results[[1]][["Pr(>F)"]]
+    
+    p_values <- rbind(p_values, data.frame(col_name = col_name, p_value = p_value))
+  }
+}
+
+p_values <- p_values |>
+  drop_na() |>
+  arrange(desc(p_value))
 
 ```
 
