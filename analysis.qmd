@@ -87,6 +87,7 @@ proteins <- data_anova$Protein
 
 ```{r}
 #| label: anova
+#| eval: false
 
 anova_results <- data_frame()
 
@@ -99,6 +100,119 @@ for (protein in proteins) {
   anova_summary <- tidy(anova_result)
 
 }
+
+```
+
+```{r}
+#| label: log_reg
+
+set.seed(123)
+
+data_split <- initial_split(log_model_data)
+train_data <- training(data_split)
+test_data <- testing(data_split)
+
+protien_model <- logistic_reg() |>
+  set_engine("glm") |>
+  fit(MS_TYPE ~ Q10588 + Q9Y240 + Q99972 + P16112 + P63313
+      , data = train_data, family = "bionomal")
+
+model_noQ10 <- logistic_reg() |>
+  set_engine("glm") |>
+  fit(MS_TYPE ~ Q9Y240 + Q99972 + P16112 + P63313
+      , data = train_data, family = "bionomal")
+
+model_noQ9 <- logistic_reg() |>
+  set_engine("glm") |>
+  fit(MS_TYPE ~ Q10588 + Q99972 + P16112 + P63313
+      , data = train_data, family = "bionomal")
+
+model_noQ99 <- logistic_reg() |>
+  set_engine("glm") |>
+  fit(MS_TYPE ~ Q10588 + Q9Y240 + P16112 + P63313
+      , data = train_data, family = "bionomal")
+
+model_noP1 <- logistic_reg() |>
+  set_engine("glm") |>
+  fit(MS_TYPE ~ Q10588 + Q9Y240 + Q99972 + P63313
+      , data = train_data, family = "bionomal")
+
+model_noP6 <- logistic_reg() |>
+  set_engine("glm") |>
+  fit(MS_TYPE ~ Q10588 + Q9Y240 + Q99972 + P16112
+      , data = train_data, family = "bionomal")
+
+```
+
+```{r}
+#| label: test_data
+
+predict(protien_model, new_data = test_data) |>
+  bind_cols(test_data) |>
+  count(MS_TYPE, .pred_class)
+
+protien_model |>
+  tidy()
+
+```
+
+```{r}
+#| label: test_data
+
+predict(model_noQ10, new_data = test_data) |>
+  bind_cols(test_data) |>
+  count(MS_TYPE, .pred_class)
+
+model_noQ10 |>
+  tidy()
+
+```
+
+```{r}
+#| label: test_data
+
+predict(model_noQ9, new_data = test_data) |>
+  bind_cols(test_data) |>
+  count(MS_TYPE, .pred_class)
+
+model_noQ9 |>
+  tidy()
+
+```
+
+```{r}
+#| label: test_data
+
+predict(model_noQ99, new_data = test_data) |>
+  bind_cols(test_data) |>
+  count(MS_TYPE, .pred_class)
+
+model_noQ99 |>
+  tidy()
+
+```
+
+```{r}
+#| label: test_data
+
+predict(model_noP1, new_data = test_data) |>
+  bind_cols(test_data) |>
+  count(MS_TYPE, .pred_class)
+
+model_noP1 |>
+  tidy()
+
+```
+
+```{r}
+#| label: test_data
+
+predict(model_noP6, new_data = test_data) |>
+  bind_cols(test_data) |>
+  count(MS_TYPE, .pred_class)
+
+model_noP6 |> 
+  tidy()
 
 ```
 
