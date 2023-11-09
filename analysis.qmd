@@ -26,7 +26,7 @@ ggplot2::theme_set(ggplot2::theme_bw(base_size = 20))
 #| warning: false
 #| message: false
 
-# Read data from an Excel file
+# read data from an Excel file
 data <- read_excel("data/filtered_data_simplified.xlsx")
 
 ```
@@ -54,11 +54,11 @@ all_v_one_data <- wide_data |>
 ```
 
 ```{r}
-#| label: create_model
+#| label: create_log_reg_data
 
-model_data <- all_v_one_data |>
+log_model_data <- all_v_one_data |>
   select(-SampleID) |>
-  mutate(MS_TYPE = as.numeric(case_when(
+  mutate(MS_TYPE = as.factor(case_when(
     MS_TYPE == "PP" ~ 1,
     MS_TYPE == "Not PP" ~ 0
   )))
@@ -66,23 +66,39 @@ model_data <- all_v_one_data |>
 ```
 
 ```{r}
+#| label: create_nova_data
+
+anova_model_data <- wide_data |>
+  filter(MS_TYPE != "Control") |>
+  group_by(MS_TYPE) |>
+  summarise(across(Q9UBX1:Q9NZV1, \(x) mean(x, na.rm = TRUE))) 
+
+```
+
+```{r}
+#| label: fixing-data
+
+data_anova <- anova_model_data |>
+  pivot_longer(cols = -MS_TYPE, names_to = "Protein", values_to = "Concentration")
+
+proteins <- data_anova$Protein
+
+```
+
+```{r}
 #| label: anova
 
-p_values <- data.frame(col_name = character(), p_value = numeric())
+anova_results <- data_frame()
 
-for (col_name in colnames(model_data)) {
-  if (col_name != "MS_TYPE") {
-    model <- aov(MS_TYPE ~ model_data[[col_name]], data = model_data)
-    anova_results <- summary(model)
-    p_value <- anova_results[[1]][["Pr(>F)"]]
-    
-    p_values <- rbind(p_values, data.frame(col_name = col_name, p_value = p_value))
-  }
+for (protein in proteins) {
+
+  useful_data <- data_anova |>
+    filter(Protein == protein)
+  
+  anova_result <- aov(Concentration ~ MS_TYPE, data = useful_data)
+  anova_summary <- tidy(anova_result)
+
 }
-
-p_values <- p_values |>
-  drop_na() |>
-  arrange(desc(p_value))
 
 ```
 
